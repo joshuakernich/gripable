@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Button Mashers</title>
+	<style type="text/css">
+		body{
+			text-align: center;
+			font-family: sans-serif;
+			font-weight: normal;
+		}
+
+		.row{
+			height: 50vh;
+			line-height: 50vh;
+
+		}
+
+		button, .light{
+			width: 100px;
+			height: 100px;
+			margin: 0px 50px;
+			border-radius: 50px;
+			border: none;
+			background: #ff9900;
+			display: inline-block;
+			position: relative;
+		}
+
+		.light{
+			
+		}
+
+		.n0{ background: #77bb77; }
+		.n1{ background: #8888ff; }
+		.n2{ background: #ffbb55; }
+
+		button.n0{ box-shadow: 0px 8px #778877; }
+		button.n1{ box-shadow: 0px 8px #7777bb; }
+		button.n2{ box-shadow: 0px 8px #ddaa33; }
+
+		.finger{
+			width: 150px;
+			height: 150px;
+			background-image: url(finger.svg);
+			background-size: contain;
+			background-position: center;
+			background-repeat: no-repeat;
+			position: absolute;
+			top: 60px;
+			left: 40px;
+			transform: rotate(-20deg);
+		}
+
+		.light.hide{
+			opacity: 0;
+			transform: scale(2);
+			transition: all 0.2s;
+		}
+
+		button:active{
+			top:8px;
+			box-shadow: none;
+		}
+
+		.feedback{
+			width: 100px;
+			height: 100px;
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			background: url('./tick.png');
+			background-size: 100%;
+		}
+
+		.feedback.bad{
+			background-image: url('./cross.png');
+		}
+
+		.light.little{
+			width: 50px;
+			height: 50px;
+			margin: 0px 10px;
+		}
+
+		.light.blip{
+			transform: scale(0.5);
+			opacity: 1;
+
+		}
+
+		.maze{
+			width: 0px;
+			height: 0px;
+			display: inline-block;
+			position: relative;
+		}
+
+		.block{
+			width: 50px;
+			height: 50px;
+			border-radius: 5px;
+			background: #dddddd;
+			position: absolute;
+			box-shadow: 0px 5px #cccccc;
+		}
+
+		.vehicle{
+			width: 40px;
+			height: 40px;
+			top: -5px;
+			left: 5px;
+			background: #BF97F2;
+			box-shadow: 0px 10px #9F77d2;
+			position: absolute;
+			border-radius: 5px;
+		}
+
+		.directional:before{
+			content: "";
+			width: 100%;
+			height: 100%;
+			background-image: url(arrow.png);
+			background-size: 50%;
+			background-position: center;
+			background-repeat: no-repeat;
+			position: absolute;
+			top: 0px;
+			left: 0px;
+		}
+
+		.directional.n1:before{
+			transform: rotate(90deg);
+		}
+
+		.directional.n0:before{
+			transform: rotate(-180deg);
+		}
+
+		.levels{
+			position: fixed;
+			top: 0px;
+			left: 0px;
+			width: 200px;
+			background: #eee;
+			height: 100vh;
+		}
+
+		.level-button{
+			border-bottom: 1px solid #ddd;
+			text-align: left;
+			padding: 10px;
+			cursor: pointer;
+		}
+
+	</style>
+	<script type="text/javascript" src='./jq.js'></script>
+	<script type="text/javascript">
+		$(function(){
+
+			var levels = [
+				{name:"Random Lights",fn:doRandomLights,p:[]},
+				{name:"Visible Sequence",fn:doSequence,p:[5,false]},
+				{name:"Hidden Sequence",fn:doSequence,p:[5,true]},
+				{name:"Maze",fn:doMaze,p:[]},
+			]
+
+			for(var l in levels){
+				$("<div class='level-button'>").appendTo('.levels').text(levels[l].name).click(onLevelButton);
+			}
+
+			function onLevelButton(){
+				doLevel($('.level-button').index(this));
+			}
+
+			function doLevel(i){
+				$('.question').empty();
+				$('button').removeClass('directional');
+
+				levels[i].fn.apply(this,levels[i].p);
+
+				//doMaze();
+				//doSequence(5,true);
+				//doRandomLights();
+			}
+
+			function doMaze(){
+				var length = 10;
+
+				var iCurrent = 0;
+
+				var maze = [0,1,1,2,1,1,0,0,1,1,2,2];
+				var dir = [{x:-1,y:0},{x:0,y:1},{x:1,y:0}];
+				var pos = [];
+
+				var cur = {x:0,y:0};
+
+				var xmin = 100;
+				var xmax = -100;
+				var ymin = 100;
+				var ymax = -100;
+
+				pos.push({x:cur.x,y:cur.y});
+
+				for(var m in maze){
+					cur.x += dir[maze[m]].x;
+					cur.y += dir[maze[m]].y;
+					pos.push({x:cur.x,y:cur.y});
+
+					xmin = Math.min(cur.x,xmin);
+					xmax = Math.max(cur.x,xmax);
+					ymin = Math.min(cur.y,ymin);
+					ymax = Math.max(cur.y,ymax);
+				}
+
+				var $maze = $('<div class="maze">').appendTo('.question').css({left:-(xmax+xmin)/2*50,top:-(ymax+ymin)/2*50})
+
+				for(var p in pos){
+					$('<div class="block">').appendTo($maze).css({left:pos[p].x*50,top:pos[p].y*50});
+				}
+				
+				var $vehicle = $('<div class="vehicle">').appendTo($maze);
+
+				$('button').addClass('directional');
+
+				clickHandler = function(i){
+					if(i==maze[iCurrent]){
+						doFeedback(i,true);
+						
+						iCurrent++;
+
+						$vehicle.animate({left:pos[iCurrent].x*50+5,top:pos[iCurrent].y*50-5},200);
+
+					} else {
+						doFeedback(i,false);
+					}
+				}
+			}
+
+			function doSequence(length,isSecret){
+
+				var iCurrent = 0;
+				var seq = [];
+
+				for(var i=0; i<length; i++){
+					var iRandom = Math.floor(Math.random()*3);
+					$('<div class="light little n'+iRandom+'">').appendTo('.question');
+					seq[i] = iRandom;
+
+				}
+
+				clickHandler = function(i){
+
+					var iTarget = seq[iCurrent];
+
+					if(i==iTarget){
+						doFeedback(iTarget,true);
+
+						$('.light').eq(iCurrent).addClass('blip');
+						iCurrent++;
+
+					} else {
+						doFeedback(i,false);
+					}
+				}
+
+				if(isSecret){
+					setTimeout(function(){
+						$('.light').addClass('hide');
+					},2000)
+				}
+			}
+
+			function doRandomLights(){
+
+				var iCurrent = 0;
+
+				for(var i=0; i<3; i++){
+					$('<div class="light n'+i+'">').appendTo('.question');
+				}
+
+				$('.light').addClass('hide');
+
+				function doNext(){
+					var iWas = iCurrent;
+					while( iCurrent == iWas ) iCurrent = Math.floor(Math.random()*3);
+
+					$('.light').addClass('hide').eq(iCurrent).removeClass('hide');
+				}
+
+				doNext();
+
+				clickHandler = function(i){
+					if(i==iCurrent){
+						doFeedback(iCurrent,true);
+						doNext();
+					} else {
+						doFeedback(i,false);
+					}
+				}
+			}
+
+			$('button').click(doClick);
+
+			function doClick(){
+				var iButton = $('button').index(this);
+
+				clickHandler.call(this,iButton)
+			}
+
+			function doFeedback(iButton,isGood){
+				$('<div class="feedback '+(isGood?'good':'bad')+'">').appendTo($('button').eq(iButton)).css({top:-50}).animate({top:-150},200).animate({top:-130},200,function(){
+					$(this).remove();
+				})
+			}
+
+
+			doLevel();
+		})
+	</script>
+</head>
+<body>
+	<div class="row question">
+		Press button
+	</div>
+	<div class="row">
+		<button class="n0"><div class="finger"></div></button>
+		<button class="n1"><div class="finger"></div></button>
+		<button class="n2"><div class="finger"></div></button>
+	</div>
+	<div class="levels"></div>
+</body>
+</html>
