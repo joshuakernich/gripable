@@ -104,6 +104,20 @@
 			box-shadow: 0px 5px #cccccc;
 		}
 
+		.tetris-block {
+			width: 50px;
+			height: 50px;
+			border-radius: 1px;
+			background: #f29797;
+			position: absolute;
+			box-shadow: 0px 5px #ba7474;
+		}
+
+		.tetris-block.target {
+			background: #dddddd;
+			box-shadow: 0px 5px #cccccc;
+		}
+
 		.vehicle{
 			width: 40px;
 			height: 40px;
@@ -162,6 +176,9 @@
 				{name:"Visible Sequence",fn:doSequence,p:[5,false]},
 				{name:"Hidden Sequence",fn:doSequence,p:[5,true]},
 				{name:"Maze",fn:doMaze,p:[]},
+				{name:"Simon Says",fn:doSimonSays,p:[5]},
+				{name:"Tetris",fn:doTetris,p:[5]},
+
 			]
 
 			for(var l in levels){
@@ -182,7 +199,47 @@
 				//doSequence(5,true);
 				//doRandomLights();
 			}
+			function doTetris(length){
+				var $grid = $('<div class="maze">').appendTo('.question').css({left:50,top:50})
+				blocks = []
+				var target = Math.floor(Math.random()*length);
+				var cursor = target;
+				while( cursor == target ) cursor = Math.floor(Math.random()*length);	
+				for(var i=0; i<length; i++) {
+					var block = $('<div class="tetris-block">').appendTo($grid).css({left:(i-(Math.floor(length/2)))*50,top:75});
+						console.log(block);
+					if (i==target)
+						block.addClass('target');
+				}
+				
+				
+				var $vehicle = $('<div class="tetris-block">').appendTo($grid);
+				$('button').addClass('directional');
+				function updateCursor() {
+					$vehicle.animate({left:(cursor-(Math.floor(length/2)))*50},200);
+				}
+				updateCursor();
+				clickHandler = function(i){
+					if(i==0 && cursor>0){
+						cursor--;
+						updateCursor();
 
+					} else if(i==2 && cursor<length-1) {
+						cursor++;
+						updateCursor();;
+					} else if (i==1 && cursor==target) {
+						$vehicle.animate({top:75});
+						doFeedback(i,true);
+						$('button').prop('disabled', true);
+						setTimeout(function(){
+							$('button').prop('disabled', false);
+							doLevel(5);
+						},1000)
+					} else {
+						doFeedback(i, false);
+					}
+				}
+			}
 			function doMaze(){
 				var length = 10;
 
@@ -229,6 +286,57 @@
 						iCurrent++;
 
 						$vehicle.animate({left:pos[iCurrent].x*50+5,top:pos[iCurrent].y*50-5},200);
+
+					} else {
+						doFeedback(i,false);
+					}
+				}
+			}
+			
+			
+
+			function doSimonSays(length) {
+				
+				var iCurrent = 0;
+				var seq = [];
+				var round = 1;
+				for (var i=0; i<length; i++) {
+					var iRandom = Math.floor(Math.random()*3);
+					seq[i] = iRandom;						
+				}
+
+				function doNext(){
+					$('.question').empty();
+					for (var j=0; j<round; j++) {
+						$('<div class="light little n'+seq[j]+'">').appendTo('.question');
+					}
+					
+					$('button').prop('disabled', true);
+					setTimeout(function(){
+						$('button').prop('disabled', false);
+						$('.light').addClass('hide');
+					},1000)
+				}
+
+				doNext();
+
+				
+				clickHandler = function(i){
+
+					var iTarget = seq[iCurrent];
+					
+					if(i==iTarget){
+						doFeedback(iTarget,true);
+
+						$('.light').eq(iCurrent).addClass('blip');
+						if(iCurrent==round-1) {
+							iCurrent = 0;
+							round++;
+							if(round<=length)
+								doNext();
+						} else {
+							iCurrent++;
+						}
 
 					} else {
 						doFeedback(i,false);
