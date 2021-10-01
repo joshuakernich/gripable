@@ -113,6 +113,12 @@
 			box-shadow: 0px 5px #ba7474;
 		}
 
+		.tetris-block.hide{
+			opacity: 0;
+			transform: scale(2);
+			transition: all 0.2s;
+		}
+
 		.tetris-block.target {
 			background: #dddddd;
 			box-shadow: 0px 5px #cccccc;
@@ -177,7 +183,7 @@
 				{name:"Hidden Sequence",fn:doSequence,p:[5,true]},
 				{name:"Maze",fn:doMaze,p:[]},
 				{name:"Simon Says",fn:doSimonSays,p:[5]},
-				{name:"Tetris",fn:doTetris,p:[5]},
+				{name:"Tetris",fn:doTetris,p:[5,5]},
 
 			]
 
@@ -199,41 +205,70 @@
 				//doSequence(5,true);
 				//doRandomLights();
 			}
-			function doTetris(length){
-				var $grid = $('<div class="maze">').appendTo('.question').css({left:50,top:50})
-				blocks = []
-				var target = Math.floor(Math.random()*length);
-				var cursor = target;
-				while( cursor == target ) cursor = Math.floor(Math.random()*length);	
-				for(var i=0; i<length; i++) {
-					var block = $('<div class="tetris-block">').appendTo($grid).css({left:(i-(Math.floor(length/2)))*50,top:75});
-						console.log(block);
-					if (i==target)
-						block.addClass('target');
+			function doTetris(width, depth){
+				var $grid = $('<div class="maze">').appendTo('.question').css({left:50,top:-10})
+				var blocks = [];
+				var targets = [];
+				var cursor = 0;
+				var level = 0;
+				for(var i=0; i<depth; i++)	{
+					var row = [];
+					var target = Math.floor(Math.random()*width);
+					for(var j=0; j<width; j++) {
+						var block = $('<div class="tetris-block">').appendTo($grid).css({left:(j-(Math.floor(width/2)))*50,top:75 + i*55});
+						row[j] = block;
+						if (j==target)
+							block.addClass('target');
+					}
+					targets[i] = target;
+					blocks[i] = row;
 				}
 				
+				function resetCursor() {
+					$vehicle.css({left: 0, top: -50});
+					cursor = targets[level];
+					while( cursor == targets[level] ) cursor = Math.floor(Math.random()*width);
+					updateCursor();
+				}
+
+				function doNext(){
+					$('button').prop('disabled', false);
+					$(blocks[level]).each(function(index) {
+						$(this).addClass('hide');
+					})	
+					$vehicle.addClass('hide');
+					if(level<depth - 1) {
+						level++;
+						setTimeout(function(){
+							
+							$vehicle.removeClass('hide');
+							resetCursor();
+	
+						},1000)	
+					}
+				}
+				console.log(blocks[target]);
 				
 				var $vehicle = $('<div class="tetris-block">').appendTo($grid);
 				$('button').addClass('directional');
 				function updateCursor() {
-					$vehicle.animate({left:(cursor-(Math.floor(length/2)))*50},200);
+					$vehicle.animate({left:(cursor-(Math.floor(width/2)))*50, top: 0},200);
 				}
-				updateCursor();
+				resetCursor();
 				clickHandler = function(i){
 					if(i==0 && cursor>0){
 						cursor--;
 						updateCursor();
 
-					} else if(i==2 && cursor<length-1) {
+					} else if(i==2 && cursor<width-1) {
 						cursor++;
 						updateCursor();;
-					} else if (i==1 && cursor==target) {
-						$vehicle.animate({top:75});
+					} else if (i==1 && cursor==targets[level]) {
+						$vehicle.animate({top:blocks[level][targets[level]].position().top});
 						doFeedback(i,true);
 						$('button').prop('disabled', true);
 						setTimeout(function(){
-							$('button').prop('disabled', false);
-							doLevel(5);
+							doNext();
 						},1000)
 					} else {
 						doFeedback(i, false);
