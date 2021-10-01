@@ -329,11 +329,20 @@
 						doFeedback(iTarget,true);
 
 						$('.light').eq(iCurrent).addClass('blip');
+						// $('.light').eq(iCurrent).removeClass('hide');
 						if(iCurrent==round-1) {
 							iCurrent = 0;
 							round++;
-							if(round<=length)
-								doNext();
+							if(round<=length) {
+								setTimeout(function(){
+
+									$('.light').removeClass('blip');
+									$('.light').addClass('hide');
+									setTimeout(function() {
+										doNext();
+									},500)
+								},1000)
+							}
 						} else {
 							iCurrent++;
 						}
