@@ -172,6 +172,23 @@
 			cursor: pointer;
 		}
 
+		.rc-car{
+
+			width: 64px;
+			height: 64px;
+			background-image: url('./red_vehicles.png');
+			display: inline-block;
+			background-size: 512px;
+			image-rendering: pixelated;
+			position: relative;
+
+			top: 0px;
+			left: 0px;
+			transition: top 0.2s, left 0.2s;
+		}
+
+		
+
 	</style>
 	<script type="text/javascript" src='./jq.js'></script>
 	<script type="text/javascript">
@@ -184,6 +201,7 @@
 				{name:"Maze",fn:doMaze,p:[]},
 				{name:"Simon Says",fn:doSimonSays,p:[5]},
 				{name:"Tetris",fn:doTetris,p:[5,5]},
+				{name:"Remote Car",fn:doRC,p:[]},
 
 			]
 
@@ -448,6 +466,30 @@
 					} else {
 						doFeedback(i,false);
 					}
+				}
+			}
+
+			function doRC(){
+
+
+				var iDir = 0;
+				var $car = $('<div class="rc-car">').appendTo('.question');
+				var pos = {left:0,top:0};
+
+				clickHandler = function(i){
+					if(i==0) iDir--;
+					if(i==2) iDir++;
+					if(i==1){
+						var dir = Math.PI*0.75 + iDir*Math.PI/4;
+						pos.left += Math.cos(dir)*50;
+						pos.top += Math.sin(dir)*50;
+
+						console.log(pos);
+					}
+
+					iDir = iDir%8;
+					$car.css('background-position-x',-iDir*64);
+					$car.css(pos);
 				}
 			}
 
