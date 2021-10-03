@@ -202,11 +202,41 @@
 			display: inline-block;
 			background-size: 512px;
 			image-rendering: pixelated;
-			position: relative;
+			position: absolute;
 
 			top: 0px;
 			left: 0px;
 			transition: top 0.2s, left 0.2s;
+		}
+
+		.rc-target{
+			width: 64px;
+			height: 64px;
+			position: absolute;
+
+		}
+
+		.rc-target:after{
+			content: "";
+			width: 20px;
+			height: 20px;
+			background: #ff9900;
+			position: absolute;
+			display: inline-block;
+			border-radius: 100px;
+			box-shadow: 0px -3px #ff6600;
+			top: 22px;
+			left: 22px;
+		}
+
+		.rc-map{
+			width: 500px;
+			height: 300px;
+			background: #ddd;
+			display: inline-block;
+			position: relative;
+			border-radius: 10px;
+
 		}
 
 
@@ -495,9 +525,14 @@
 
 				$('button').addClass('steer');
 
+				var $map = $('<div class="rc-map">').appendTo('.question');
+
 				var iDir = 0;
-				var $car = $('<div class="rc-car">').appendTo('.question');
+				var $car = $('<div class="rc-car">').appendTo($map);
 				var pos = {left:0,top:0};
+
+				var x = 0;
+				var y = 0;
 
 				clickHandler = function(i){
 					if(i==0) iDir--;
@@ -513,7 +548,26 @@
 					iDir = iDir%8;
 					$car.css('background-position-x',-iDir*64);
 					$car.css(pos);
+
+					var dx = pos.left-x;
+					var dy = pos.top-y;
+					var d = Math.sqrt(dx*dx+dy*dy)
+
+					if(d<30){
+						doNextTarget();
+					}
 				}
+
+				function doNextTarget(){
+					$('.rc-target').remove();
+
+					x = Math.random()*(500-64);
+					y = Math.random()*(300-64);
+
+					$('<div class="rc-target">').css({left:x,top:y}).appendTo($map);
+				}
+
+				doNextTarget();
 			}
 
 			$('button').click(doClick);
