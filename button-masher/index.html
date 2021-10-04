@@ -267,7 +267,7 @@
 
 			function doLevel(i){
 				$('.question').empty();
-				$('button').removeClass('directional');
+				$('button').removeClass('steer directional');
 
 				levels[i].fn.apply(this,levels[i].p);
 
@@ -382,7 +382,7 @@
 				
 				var $vehicle = $('<div class="vehicle">').appendTo($maze);
 
-				$('button').addClass('directional steer');
+				$('button').addClass('directional');
 
 				clickHandler = function(i){
 					if(i==maze[iCurrent]){
